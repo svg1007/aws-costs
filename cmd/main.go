@@ -1,13 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
-
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/pricing"
 
 	"github.com/svg1007/aws-costs/internal/aws"
 	"github.com/svg1007/aws-costs/internal/calculator"
@@ -15,55 +10,41 @@ import (
 )
 
 func main() {
-	// Load AWS SDK configuration
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1")) // Pricing API only available in us-east-1
-	if err != nil {
-		log.Fatalf("❌ Unable to load AWS SDK config: %v", err)
-	}
-
-	// Create AWS clients
-	pricingClient := pricing.NewFromConfig(cfg)
-	ec2Client := ec2.NewFromConfig(cfg)
-
 	// Parse Terraform plan JSON
 	plan, err := terraform.ParseTerraformPlan("terraform/tfplan.json")
 	if err != nil {
 		log.Fatalf("❌ Error parsing Terraform plan: %v", err)
 	}
 
-	// Extract AWS region from Terraform plan
-	regionCode := plan.Configuration.ProviderConfig.AWS.Expressions.Region.ConstantValue
-	fmt.Println("🌍 AWS Region Code from Terraform:", regionCode)
+	// Extract EC2 Instances, EBS Volumes, and AWS Region
+	ec2Instances, ebsVolumes, awsRegion := plan.ExtractResources()
 
-	// Retrieve the correct AWS Pricing API region name
-	pricingRegion, err := aws.GetRegionName(context.TODO(), pricingClient, regionCode)
-	if err != nil {
-		log.Fatalf("❌ Failed to map AWS region: %v", err)
-	}
-	fmt.Println("📍 Mapped AWS Pricing Region:", pricingRegion)
+	// Print AWS Region
+	fmt.Println("🌍 AWS Region:", awsRegion)
 
-	// Track total cost and instance count
-	totalCost := 0.0
-	instanceCount := 0
-
-	// Process EC2 instances and estimate costs
-	for _, instance := range plan.GetEC2Instances() {
-		price, err := aws.GetEC2Price(context.TODO(), ec2Client, pricingClient, instance.InstanceType, regionCode)
+	// Process EC2 Instances Pricing
+	fmt.Println("🚀 EC2 Instances:")
+	for _, instance := range ec2Instances {
+		price, err := aws.GetEC2Price(instance.InstanceType, awsRegion)
 		if err != nil {
-			log.Printf("❌ Failed to fetch price for %s: %v\n", instance.InstanceType, err)
+			log.Printf("❌ Failed to fetch price for EC2 %s: %v\n", instance.InstanceType, err)
 			continue
 		}
 
-		monthlyCost := calculator.EstimateMonthlyCost(price, 730)
-		// fmt.Printf("✅ Instance: %s, Region: %s, Monthly Cost: $%.2f\n", instance.InstanceType, regionCode, monthlyCost)
-
-		// Update total cost and count
-		totalCost += monthlyCost
-		instanceCount++
+		monthlyCost := calculator.EstimateEC2MonthlyCost(price, 730)
+		fmt.Printf("  ✅ Instance Type: %s, Monthly Cost: $%.2f\n", instance.InstanceType, monthlyCost)
 	}
 
-	// Print final summary
-	fmt.Println("\n📊 **Summary**")
-	fmt.Printf("🔢 Total Instances Processed: %d\n", instanceCount)
-	fmt.Printf("💰 Total Estimated Monthly Cost: $%.2f\n", totalCost)
+	// Process EBS Volumes Pricing
+	fmt.Println("💾 EBS Volumes:")
+	for _, volume := range ebsVolumes {
+		pricePerGB, err := aws.GetEBSPrice(volume.Type, awsRegion)
+		if err != nil {
+			log.Printf("❌ Failed to fetch price for EBS %s: %v\n", volume.Type, err)
+			continue
+		}
+
+		monthlyCost := calculator.EstimateEBSMonthlyCost(pricePerGB, volume.Size)
+		fmt.Printf("  📦 Size: %dGB, Type: %s, Monthly Cost: $%.2f\n", volume.Size, volume.Type, monthlyCost)
+	}
 }
