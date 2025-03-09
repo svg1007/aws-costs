@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 )
 
 // TerraformPlan represents the structure of Terraform's JSON output
@@ -79,9 +80,9 @@ func (t *TerraformPlan) ExtractResources() ([]EC2Instance, []EBSVolume, string) 
 			case "aws_ebs_volume":
 				var volume EBSVolume
 				if err := json.Unmarshal(resource.Change.After, &volume); err == nil {
-          // if volume.Type == "" {
-          //   volume.Type = "gp2"
-          // }
+					// if volume.Type == "" {
+					//   volume.Type = "gp2"
+					// }
 					ebsVolumes = append(ebsVolumes, volume)
 				} else {
 					fmt.Println("❌ Error parsing EBS volume:", err)
@@ -95,10 +96,5 @@ func (t *TerraformPlan) ExtractResources() ([]EC2Instance, []EBSVolume, string) 
 
 // Helper function to check if an action exists in the change set
 func contains(actions []string, action string) bool {
-	for _, a := range actions {
-		if a == action {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(actions, action)
 }

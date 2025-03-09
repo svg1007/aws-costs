@@ -28,6 +28,20 @@ resource "aws_instance" "web" {
   }
 }
 
+resource "aws_instance" "backend" {
+  count         = 2
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = "c5.large"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 150
+  }
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+
 resource "aws_ebs_volume" "example" {
   availability_zone = "us-west-2a"
   size              = 40
