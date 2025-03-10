@@ -30,7 +30,7 @@ resource "aws_instance" "web" {
 
 resource "aws_instance" "backend" {
   count         = 2
-  ami           = data.aws_ami.ubuntu.id
+  ami           = "ami-05188fcabea1c2e9f"
   instance_type = "c5.large"
 
   root_block_device {
@@ -42,9 +42,21 @@ resource "aws_instance" "backend" {
   }
 }
 
-resource "aws_ebs_volume" "example" {
+resource "aws_ebs_volume" "main" {
+  count             = 2
   availability_zone = "us-west-2a"
   size              = 40
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
+
+resource "aws_ebs_volume" "extra" {
+  count             = 3
+  availability_zone = "us-west-2a"
+  size              = 100
+  type              = "gp3"
 
   tags = {
     Name = "HelloWorld"

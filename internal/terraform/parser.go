@@ -35,7 +35,15 @@ type ResourceChange struct {
 
 // EC2Instance represents EC2 instances in Terraform
 type EC2Instance struct {
-	InstanceType string `json:"instance_type"`
+	InstanceType    string `json:"instance_type"`
+	RootBlockDevice struct {
+		Size int    `json:"volume_size"`
+		Type string `json:"volume_type"`
+	} `json:"root_block_device"`
+	EbsVolume struct {
+		Size int    `json:"volume_size"`
+		Type string `json:"volume_type"`
+	} `json:"ebs_volume"`
 }
 
 // EBSVolume represents EBS volumes in Terraform
@@ -80,9 +88,9 @@ func (t *TerraformPlan) ExtractResources() ([]EC2Instance, []EBSVolume, string) 
 			case "aws_ebs_volume":
 				var volume EBSVolume
 				if err := json.Unmarshal(resource.Change.After, &volume); err == nil {
-					// if volume.Type == "" {
-					//   volume.Type = "gp2"
-					// }
+					if volume.Type == "" {
+						volume.Type = "gp2"
+					}
 					ebsVolumes = append(ebsVolumes, volume)
 				} else {
 					fmt.Println("❌ Error parsing EBS volume:", err)

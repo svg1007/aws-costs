@@ -38,6 +38,8 @@ func GetEC2Price(instanceType, region string) (float64, error) {
 		Filters: []types.Filter{
 			{Type: types.FilterTypeTermMatch, Field: aws.String("instanceType"), Value: aws.String(instanceType)},
 			{Type: types.FilterTypeTermMatch, Field: aws.String("location"), Value: aws.String(location)},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("tenancy"), Value: aws.String("Shared")},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("operatingSystem"), Value: aws.String("Linux")}, // TODO
 		},
 	}
 
@@ -46,6 +48,7 @@ func GetEC2Price(instanceType, region string) (float64, error) {
 		return 0, err
 	}
 
+	// fmt.Println("Response:", resp)
 	if len(resp.PriceList) == 0 {
 		log.Println("❌ No pricing data found for EC2:", instanceType, "in", location)
 		return 0, fmt.Errorf("no pricing data found for EC2 instance: %s", instanceType)
@@ -80,7 +83,7 @@ func GetEBSPrice(volumeType, region string) (float64, error) {
 		ServiceCode: aws.String("AmazonEC2"),
 		Filters: []types.Filter{
 			{Type: types.FilterTypeTermMatch, Field: aws.String("productFamily"), Value: aws.String("Storage")},
-			{Type: types.FilterTypeTermMatch, Field: aws.String("volumeType"), Value: aws.String(volumeType)},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("volumeApiName"), Value: aws.String(volumeType)},
 			{Type: types.FilterTypeTermMatch, Field: aws.String("location"), Value: aws.String(location)},
 		},
 	}
@@ -125,7 +128,6 @@ func extractPrice(priceList []string) float64 {
 	return 0.0
 }
 
-
 // GetRegionMapping fetches AWS Pricing API region names dynamically
 func GetRegionMapping() (map[string]string, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
@@ -162,18 +164,18 @@ func GetRegionMapping() (map[string]string, error) {
 // inferRegionFromLocation extracts region codes dynamically from AWS Pricing API
 func inferRegionFromLocation(location string) string {
 	regionMapping := map[string]string{
-		"US East (N. Virginia)":      "us-east-1",
-		"US East (Ohio)":             "us-east-2",
-		"US West (N. California)":    "us-west-1",
-		"US West (Oregon)":           "us-west-2",
-		"EU (Frankfurt)":             "eu-central-1",
-		"EU (Ireland)":               "eu-west-1",
-		"EU (London)":                "eu-west-2",
-		"EU (Paris)":                 "eu-west-3",
-		"Asia Pacific (Singapore)":   "ap-southeast-1",
-		"Asia Pacific (Sydney)":      "ap-southeast-2",
-		"Asia Pacific (Tokyo)":       "ap-northeast-1",
-		"Asia Pacific (Seoul)":       "ap-northeast-2",
+		"US East (N. Virginia)":    "us-east-1",
+		"US East (Ohio)":           "us-east-2",
+		"US West (N. California)":  "us-west-1",
+		"US West (Oregon)":         "us-west-2",
+		"EU (Frankfurt)":           "eu-central-1",
+		"EU (Ireland)":             "eu-west-1",
+		"EU (London)":              "eu-west-2",
+		"EU (Paris)":               "eu-west-3",
+		"Asia Pacific (Singapore)": "ap-southeast-1",
+		"Asia Pacific (Sydney)":    "ap-southeast-2",
+		"Asia Pacific (Tokyo)":     "ap-northeast-1",
+		"Asia Pacific (Seoul)":     "ap-northeast-2",
 	}
 
 	if regionCode, exists := regionMapping[location]; exists {

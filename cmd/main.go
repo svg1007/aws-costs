@@ -17,8 +17,7 @@ func main() {
 	}
 
 	// Extract EC2 Instances, EBS Volumes, and AWS Region
-	// ec2Instances, ebsVolumes, awsRegion := plan.ExtractResources()
-	ec2Instances, _, awsRegion := plan.ExtractResources()
+	ec2Instances, ebsVolumes, awsRegion := plan.ExtractResources()
 
 	// Print AWS Region
 	fmt.Println("🌍 AWS Region:", awsRegion)
@@ -43,18 +42,27 @@ func main() {
 		ec2InstancesCostsSummary += ec2InstanceMonthlyCostDict[instance.InstanceType]
 	}
 
-	fmt.Printf("📦 Total EC2 Instances Cost: $%.2f\n", ec2InstancesCostsSummary)
-
 	// Process EBS Volumes Pricing
-	// fmt.Println("💾 EBS Volumes:")
-	// for _, volume := range ebsVolumes {
-	// 	pricePerGB, err := aws.GetEBSPrice(volume.Type, awsRegion)
-	// 	if err != nil {
-	// 		log.Printf("❌ Failed to fetch price for EBS %s: %v\n", volume.Type, err)
-	// 		continue
-	// 	}
+	fmt.Println("💾 EBS Volumes:")
+	ebsVolumesMonthlyCostDict := map[string]float64{}
+	ebsVolumesCostsSummary := float64(0)
+	for _, volume := range ebsVolumes {
+		if _, exists := ebsVolumesMonthlyCostDict[volume.Type]; !exists {
+			pricePerGB, err := aws.GetEBSPrice(volume.Type, awsRegion)
+			if err != nil {
+				log.Printf("❌ Failed to fetch price for EBS %s: %v\n", volume.Type, err)
+				continue
+			}
 
-	// 	monthlyCost := calculator.EstimateEBSMonthlyCost(pricePerGB, volume.Size)
-	// 	fmt.Printf("  📦 Size: %dGB, Type: %s, Monthly Cost: $%.2f\n", volume.Size, volume.Type, monthlyCost)
-	// }
+			monthlyCost := calculator.EstimateEBSMonthlyCost(pricePerGB, volume.Size)
+			ebsVolumesMonthlyCostDict[volume.Type] = monthlyCost
+		}
+		fmt.Printf("  📦 Size: %dGB, Type: %s, Monthly Cost: $%.2f\n", volume.Size, volume.Type, ebsVolumesMonthlyCostDict[volume.Type])
+		ebsVolumesCostsSummary += ebsVolumesMonthlyCostDict[volume.Type]
+	}
+
+	fmt.Println("📊 Summary:")
+	fmt.Printf("📦 Total EC2 Instances Cost: $%.2f\n", ec2InstancesCostsSummary)
+	fmt.Printf("💾 Total EBS Volumes Cost: $%.2f\n", ebsVolumesCostsSummary)
+	fmt.Printf("💰 Total Monthly Cost: $%.2f\n", ec2InstancesCostsSummary+ebsVolumesCostsSummary)
 }
