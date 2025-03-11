@@ -37,6 +37,16 @@ resource "aws_instance" "backend" {
     volume_type = "gp2"
     volume_size = 150
   }
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 70
+    volume_type = "gp3"
+  }
+  ebs_block_device {
+    device_name = "/dev/sdc"
+    volume_size = 140
+    volume_type = "gp3"
+  }
   tags = {
     Name = "HelloWorld"
   }

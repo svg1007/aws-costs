@@ -62,7 +62,7 @@ func main() {
 	}
 
 	fmt.Println("📊 Summary:")
-	fmt.Printf("📦 Total EC2 Instances Cost: $%.2f\n", ec2InstancesCostsSummary)
-	fmt.Printf("💾 Total EBS Volumes Cost: $%.2f\n", ebsVolumesCostsSummary)
-	fmt.Printf("💰 Total Monthly Cost: $%.2f\n", ec2InstancesCostsSummary+ebsVolumesCostsSummary)
+	fmt.Printf("  📦 Total EC2 Instances Cost: $%.2f\n", ec2InstancesCostsSummary)
+	fmt.Printf("  💾 Total EBS Volumes Cost: $%.2f\n", ebsVolumesCostsSummary)
+	fmt.Printf("  💰 Total Monthly Cost: $%.2f\n", ec2InstancesCostsSummary+ebsVolumesCostsSummary)
 }

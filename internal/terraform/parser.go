@@ -33,17 +33,26 @@ type ResourceChange struct {
 	} `json:"change"`
 }
 
+type EbsVolume struct {
+	Size int    `json:"volume_size"`
+	Type string `json:"volume_type"`
+}
+
 // EC2Instance represents EC2 instances in Terraform
 type EC2Instance struct {
 	InstanceType    string `json:"instance_type"`
-	RootBlockDevice struct {
+	RootBlockDevice []struct {
 		Size int    `json:"volume_size"`
 		Type string `json:"volume_type"`
 	} `json:"root_block_device"`
-	EbsVolume struct {
+	EbsBlockDevice []struct {
 		Size int    `json:"volume_size"`
 		Type string `json:"volume_type"`
-	} `json:"ebs_volume"`
+	} `json:"ebs_block_device"`
+	EbsVolume struct {
+		Size int    `json:"size"`
+		Type string `json:"type"`
+	} `json:"aws_ebs_volume"`
 }
 
 // EBSVolume represents EBS volumes in Terraform
@@ -82,6 +91,20 @@ func (t *TerraformPlan) ExtractResources() ([]EC2Instance, []EBSVolume, string) 
 				var instance EC2Instance
 				if err := json.Unmarshal(resource.Change.After, &instance); err == nil {
 					ec2Instances = append(ec2Instances, instance)
+
+					for _, rbd := range instance.RootBlockDevice {
+						ebsVolumes = append(ebsVolumes, EBSVolume{
+							Size: rbd.Size,
+							Type: rbd.Type,
+						})
+					}
+
+					for _, ebd := range instance.EbsBlockDevice {
+						ebsVolumes = append(ebsVolumes, EBSVolume{
+							Size: ebd.Size,
+							Type: ebd.Type,
+						})
+					}
 				} else {
 					fmt.Println("❌ Error parsing EC2 instance:", err)
 				}

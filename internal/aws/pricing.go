@@ -38,7 +38,7 @@ func GetEC2Price(instanceType, region string) (float64, error) {
 		Filters: []types.Filter{
 			{Type: types.FilterTypeTermMatch, Field: aws.String("instanceType"), Value: aws.String(instanceType)},
 			{Type: types.FilterTypeTermMatch, Field: aws.String("location"), Value: aws.String(location)},
-			{Type: types.FilterTypeTermMatch, Field: aws.String("tenancy"), Value: aws.String("Shared")},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("tenancy"), Value: aws.String("Shared")},        // TODO
 			{Type: types.FilterTypeTermMatch, Field: aws.String("operatingSystem"), Value: aws.String("Linux")}, // TODO
 		},
 	}
