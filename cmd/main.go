@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/svg1007/aws-costs/internal/aws"
 	"github.com/svg1007/aws-costs/internal/calculator"
@@ -12,11 +13,21 @@ import (
 
 func main() {
 	verbose := flag.Bool("verbose", false, "Show detailed information for each resource")
-	flag.BoolVar(verbose, "v", false, "Show detailed information for each resource (shorthand)")
+
 	flag.Parse()
 
+	args := flag.Args()
+	if len(args) < 1 {
+		fmt.Println("Error: Missing required argument <plan-file> in JSON format")
+		fmt.Println("Usage: aws-costs <plan-file> [-v|--verbose]")
+		os.Exit(1)
+	}
+
+	// First positional argument is the required plan-file
+	planFile := args[0]
+
 	// Parse Terraform plan JSON
-	plan, err := terraform.ParseTerraformPlan("terraform/tfplan.json")
+	plan, err := terraform.ParseTerraformPlan(planFile)
 	if err != nil {
 		log.Fatalf("❌ Error parsing Terraform plan: %v", err)
 	}
