@@ -13,7 +13,7 @@ import (
 )
 
 // GetEC2Price retrieves the hourly price of an EC2 instance type in a specific region
-func GetEC2Price(instanceType, region string) (float64, error) {
+func GetEC2Price(region string, instanceType string, os string, preinstalledSw string) (float64, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
 	if err != nil {
 		return 0, err
@@ -38,8 +38,11 @@ func GetEC2Price(instanceType, region string) (float64, error) {
 		Filters: []types.Filter{
 			{Type: types.FilterTypeTermMatch, Field: aws.String("instanceType"), Value: aws.String(instanceType)},
 			{Type: types.FilterTypeTermMatch, Field: aws.String("location"), Value: aws.String(location)},
-			{Type: types.FilterTypeTermMatch, Field: aws.String("tenancy"), Value: aws.String("Shared")},        // TODO
-			{Type: types.FilterTypeTermMatch, Field: aws.String("operatingSystem"), Value: aws.String("Linux")}, // TODO
+			{Type: types.FilterTypeTermMatch, Field: aws.String("operatingSystem"), Value: aws.String(os)},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("preInstalledSw"), Value: aws.String(preinstalledSw)},
+			{Type: types.FilterTypeTermMatch, Field: aws.String("tenancy"), Value: aws.String("Shared")},                           // TODO
+			{Type: types.FilterTypeTermMatch, Field: aws.String("licenseModel"), Value: aws.String("No License required")},         // TODO
+			{Type: types.FilterTypeTermMatch, Field: aws.String("capacitystatus"), Value: aws.String("UnusedCapacityReservation")}, // TODO
 		},
 	}
 
@@ -48,7 +51,6 @@ func GetEC2Price(instanceType, region string) (float64, error) {
 		return 0, err
 	}
 
-	// fmt.Println("Response:", resp)
 	if len(resp.PriceList) == 0 {
 		log.Println("❌ No pricing data found for EC2:", instanceType, "in", location)
 		return 0, fmt.Errorf("no pricing data found for EC2 instance: %s", instanceType)
@@ -105,18 +107,18 @@ func GetEBSPrice(volumeType, region string) (float64, error) {
 // extractPrice parses the AWS Pricing API response and retrieves the hourly price
 func extractPrice(priceList []string) float64 {
 	for _, item := range priceList {
-		var result map[string]interface{}
+		var result map[string]any
 		if err := json.Unmarshal([]byte(item), &result); err != nil {
 			log.Println("❌ Error parsing price JSON:", err)
 			continue
 		}
 
-		if terms, ok := result["terms"].(map[string]interface{}); ok {
-			if onDemand, ok := terms["OnDemand"].(map[string]interface{}); ok {
+		if terms, ok := result["terms"].(map[string]any); ok {
+			if onDemand, ok := terms["OnDemand"].(map[string]any); ok {
 				for _, offer := range onDemand {
-					priceData := offer.(map[string]interface{})["priceDimensions"].(map[string]interface{})
+					priceData := offer.(map[string]any)["priceDimensions"].(map[string]any)
 					for _, pd := range priceData {
-						priceStr := pd.(map[string]interface{})["pricePerUnit"].(map[string]interface{})["USD"].(string)
+						priceStr := pd.(map[string]any)["pricePerUnit"].(map[string]any)["USD"].(string)
 						var price float64
 						fmt.Sscanf(priceStr, "%f", &price)
 						return price

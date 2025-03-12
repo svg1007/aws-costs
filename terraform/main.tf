@@ -15,7 +15,7 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "web" {
-  count         = 6
+  count         = 3
   ami           = data.aws_ami.ubuntu.id
   instance_type = "c5.xlarge"
 
@@ -53,7 +53,6 @@ resource "aws_instance" "backend" {
 }
 
 resource "aws_ebs_volume" "main" {
-  count             = 2
   availability_zone = "us-west-2a"
   size              = 40
 
@@ -63,7 +62,6 @@ resource "aws_ebs_volume" "main" {
 }
 
 resource "aws_ebs_volume" "extra" {
-  count             = 3
   availability_zone = "us-west-2a"
   size              = 100
   type              = "gp3"

@@ -33,14 +33,10 @@ type ResourceChange struct {
 	} `json:"change"`
 }
 
-type EbsVolume struct {
-	Size int    `json:"volume_size"`
-	Type string `json:"volume_type"`
-}
-
 // EC2Instance represents EC2 instances in Terraform
 type EC2Instance struct {
 	InstanceType    string `json:"instance_type"`
+	Ami             string `json:"ami"`
 	RootBlockDevice []struct {
 		Size int    `json:"volume_size"`
 		Type string `json:"volume_type"`
