@@ -48,9 +48,15 @@ Where:
 
 ### Example
 
-`./aws-costs my-plan.json -v`
+`./aws-costs my-plan.json`
 
-This runs the tool with verbose output enabled.
+#### Example output:
+```
+📊 Summary:
+  📦 Total EC2 Instances Cost: $630.72
+  💾 Total EBS Volumes Cost: $76.00
+  💰 Total Monthly Cost: $706.72
+```
 
 ## Requirements
 
