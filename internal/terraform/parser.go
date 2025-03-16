@@ -22,6 +22,8 @@ type TerraformPlan struct {
 	} `json:"configuration"`
 
 	ResourceChanges []ResourceChange `json:"resource_changes"`
+
+	TerraformVersion string `json:"terraform_version"`
 }
 
 // ResourceChange represents a single resource change in Terraform

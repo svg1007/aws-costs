@@ -1,0 +1,79 @@
+{
+  "format_version": "1.1",
+  "terraform_version": "1.5.0",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_instance.example",
+          "mode": "managed",
+          "type": "aws_instance",
+          "name": "example",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "ami": "ami-12345678",
+            "instance_type": "t3.micro",
+            "tags": {
+              "Name": "ExampleInstance"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "aws_instance.example",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "example",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "ami": "ami-12345678",
+          "instance_type": "t3.micro",
+          "root_block_device": [
+            {
+              "volume_size": 8,
+              "volume_type": "gp2"
+            }
+          ],
+          "tags": {
+            "Name": "ExampleInstance"
+          }
+        }
+      }
+    },
+    {
+      "address": "aws_ebs_volume.example",
+      "mode": "managed",
+      "type": "aws_ebs_volume",
+      "name": "example",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "size": 10,
+          "type": "gp2",
+          "tags": {
+            "Name": "ExampleVolume"
+          }
+        }
+      }
+    }
+  ],
+  "prior_state": null,
+  "configuration": {
+    "provider_config": {
+      "aws": {
+        "name": "aws",
+        "expressions": {
+          "region": {
+            "constant_value": "us-east-1"
+          }
+        }
+      }
+    }
+  }
+}
